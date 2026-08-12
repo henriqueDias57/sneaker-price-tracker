@@ -1,0 +1,65 @@
+[
+  {
+    "id": "nike-vomero-5-cobblestone",
+    "name": "Nike Zoom Vomero 5",
+    "colorway": "Cobblestone / Flat Pewter",
+    "size": "BR 40",
+    "target_price": 950.00,
+    "sources": [
+      {
+        "name": "StockX",
+        "url": "https://stockx.com/nike-zoom-vomero-5-cobblestone",
+        "type": "manual"
+      },
+      {
+        "name": "Loja Nike",
+        "url": "https://www.nike.com.br/snkrs/vomero-5",
+        "type": "manual"
+      },
+      {
+        "name": "Kicks Store (Demo)",
+        "url": "https://example-sneaker-store.com/vomero5",
+        "type": "html",
+        "css_selector": ".product-price-current"
+      }
+    ]
+  },
+  {
+    "id": "nike-air-force-1-07-white",
+    "name": "Nike Air Force 1 '07",
+    "colorway": "Triple White",
+    "size": "BR 40",
+    "target_price": 700.00,
+    "sources": [
+      {
+        "name": "StockX",
+        "url": "https://stockx.com/nike-air-force-1-low-07-white",
+        "type": "manual"
+      },
+      {
+        "name": "Centauro",
+        "url": "https://www.centauro.com.br/tenis-nike-air-force-1-07-masculino-965700.html",
+        "type": "manual"
+      }
+    ]
+  },
+  {
+    "id": "nike-dunk-low-panda",
+    "name": "Nike Dunk Low",
+    "colorway": "Black White (Panda)",
+    "size": "BR 40",
+    "target_price": 800.00,
+    "sources": [
+      {
+        "name": "StockX",
+        "url": "https://stockx.com/nike-dunk-low-retro-white-black-2021",
+        "type": "manual"
+      },
+      {
+        "name": "Farfetch",
+        "url": "https://www.farfetch.com/br/shopping/men/nike-dunk-low-item-123.aspx",
+        "type": "manual"
+      }
+    ]
+  }
+]

@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Database files
+database/*.db
+database/*.sqlite
+*.sqlite3
+
+# Generated reports & charts (except .gitkeep)
+reports/*.png
+reports/*.csv
+reports/*.json
+!reports/.gitkeep
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
