@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sneaker Pulse // Tactical Command Center</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+
+  <!-- External Libraries CDN (Three.js & Chart.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- WebGL 3D Particle Canvas Background -->
+  <div id="webgl-container"></div>
+  <div class="hud-grid-overlay"></div>
+  <div class="scanline"></div>
+
+  <!-- Boot Terminal Initialization Overlay -->
+  <div id="boot-overlay">
+    <div class="boot-box">
+      <div class="boot-header">
+        <span class="brand-icon"></span>
+        SNEAKER PULSE OS v2.4 // TELEMETRY LINK
+      </div>
+      <div class="boot-terminal" id="boot-terminal-text">
+        <div class="boot-line"><span>[SYSTEM]</span> Initializing core subsystems... <span class="ok">OK</span></div>
+        <div class="boot-line"><span>[DB]</span> SQLite database link active... <span class="ok">CONNECTED</span></div>
+        <div class="boot-line"><span>[WEBGL]</span> Mounting 3D Particle Radar grid... <span class="ok">READY</span></div>
+        <div class="boot-line"><span>[SCRAPERS]</span> StockX & Nike API endpoints mapped... <span class="ok">ONLINE</span></div>
+      </div>
+      <div class="boot-progress-bar">
+        <div class="boot-progress-fill" id="boot-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App Layout -->
+  <div id="app-root">
+
+    <!-- Top HUD Navigation Header -->
+    <header class="hud-header">
+      <div class="brand-title">
+        <div class="brand-icon"></div>
+        <div class="brand-name">SNEAKER<span>PULSE</span></div>
+      </div>
+
+      <div class="telemetry-status">
+        <div class="status-badge">
+          <span class="pulse-dot"></span>
+          LIVE MONITOR ACTIVE
+        </div>
+        <div style="color: var(--text-muted);">
+          REFRESH: <span id="last-update-time" style="color: var(--text-primary);">--:--:--</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Key Telemetry Metrics Grid -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Modelos Monitorados</div>
+        <div class="stat-value" id="stat-total-models">0</div>
+        <div class="stat-desc">Tênis ativos no radar (Tam BR 40)</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Alertas Preço-Alvo</div>
+        <div class="stat-value highlight" id="stat-target-hits">0</div>
+        <div class="stat-desc">Oportunidades prontas para compra</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Menores Preços Históricos</div>
+        <div class="stat-value" id="stat-alltime-lows" style="color: var(--cyan-drop);">0</div>
+        <div class="stat-desc">Preços no menor nível registrado</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Desconto Médio Máximo</div>
+        <div class="stat-value" id="stat-avg-discount">0%</div>
+        <div class="stat-desc">Economia em relação aos picos</div>
+      </div>
+    </section>
+
+    <!-- Control Bar (Actions & Filters) -->
+    <section class="control-bar">
+      <div class="section-heading">Radar de Tênis em Vigilância</div>
+      <div class="action-buttons">
+        <button class="btn-hud" id="btn-collect">
+          ⚡ Executar Varredura
+        </button>
+        <button class="btn-hud btn-secondary" id="btn-seed">
+          📊 Gerar 30D Mock
+        </button>
+        <button class="btn-hud btn-secondary" id="btn-refresh">
+          🔄 Atualizar
+        </button>
+      </div>
+    </section>
+
+    <!-- Monitored Sneakers Grid -->
+    <section class="sneakers-grid" id="sneakers-container">
+      <!-- Injetado dinamicamente via JS -->
+    </section>
+
+    <!-- Interactive Charts Section -->
+    <section class="charts-section">
+      <div class="chart-panel">
+        <div class="chart-header">
+          <div class="section-heading">Histórico de Flutuação de Preço (R$)</div>
+          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">Últimos 30 Dias</span>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="priceHistoryChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-header">
+          <div class="section-heading">Comparação de Lojas</div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="sourceComparisonChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- System Telemetry Console Log Drawer -->
+    <section class="chart-panel">
+      <div class="section-heading" style="margin-bottom: 0.75rem;">Terminal de Eventos & Alertas</div>
+      <div class="terminal-drawer" id="system-terminal-log">
+        <div class="terminal-entry"><span class="timestamp">[SYSTEM]</span> Sneaker Pulse Tactical Operations Console ativada.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/radar3d.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/tilt.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
