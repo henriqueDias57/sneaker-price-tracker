@@ -1,22 +1,23 @@
 /* ==========================================================================
-   SNEAKER PULSE COMMAND CENTER - THREE.JS 3D PARTICLE RADAR MATRIX
+   SNEAKER PULSE COMMAND CENTER - THREE.JS 3D PARTICLE RADAR & LASER SCANNER
    ========================================================================== */
 
 (function () {
   const container = document.getElementById("webgl-container");
   if (!container || typeof THREE === "undefined") return;
 
-  // Check prefers-reduced-motion
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     container.style.display = "none";
     return;
   }
 
-  let scene, camera, renderer, particleSystem;
+  let scene, camera, renderer, particleSystem, scanBeamPlane;
   let mouseX = 0, mouseY = 0;
   let windowHalfX = window.innerWidth / 2;
   let windowHalfY = window.innerHeight / 2;
   let animationFrameId = null;
+  let isScanningBeamActive = false;
+  let scanBeamY = 400;
 
   function init() {
     scene = new THREE.Scene();
@@ -52,7 +53,7 @@
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
-    // Particle Material with Glowing Canvas Texture
+    // Canvas Texture for Glow
     const canvas = document.createElement("canvas");
     canvas.width = 16;
     canvas.height = 16;
@@ -77,6 +78,18 @@
 
     particleSystem = new THREE.Points(geometry, material);
     scene.add(particleSystem);
+
+    // Laser Beam Scanning Plane
+    const scanGeo = new THREE.PlaneGeometry(1200, 10);
+    const scanMat = new THREE.MeshBasicMaterial({
+      color: 0xff1e42,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.DoubleSide
+    });
+    scanBeamPlane = new THREE.Mesh(scanGeo, scanMat);
+    scanBeamPlane.position.y = 400;
+    scene.add(scanBeamPlane);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -123,8 +136,24 @@
       particleSystem.rotation.x += 0.0005;
     }
 
+    if (isScanningBeamActive && scanBeamPlane) {
+      scanBeamY -= 12;
+      scanBeamPlane.position.y = scanBeamY;
+      scanBeamPlane.material.opacity = 0.6;
+      if (scanBeamY < -400) {
+        scanBeamY = 400;
+        isScanningBeamActive = false;
+        scanBeamPlane.material.opacity = 0.0;
+      }
+    }
+
     renderer.render(scene, camera);
   }
+
+  window.triggerLaserScan = function () {
+    isScanningBeamActive = true;
+    scanBeamY = 400;
+  };
 
   window.addEventListener("DOMContentLoaded", init);
 })();

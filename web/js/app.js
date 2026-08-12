@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SNEAKER PULSE COMMAND CENTER - MAIN CONTROLLER & DATA BINDING
+   SNEAKER PULSE COMMAND CENTER - MAIN CONTROLLER & MARKET SCANNER
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,6 +9,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const lastUpdateTime = document.getElementById("last-update-time");
   const sneakersContainer = document.getElementById("sneakers-container");
   const systemLogContainer = document.getElementById("system-terminal-log");
+
+  // Search Elements
+  const searchInput = document.getElementById("market-search-input");
+  const searchClearBtn = document.getElementById("search-clear-btn");
+  const searchStatusBar = document.getElementById("search-status-bar");
+  const searchStatusText = document.getElementById("search-status-text");
+  const searchResultsContainer = document.getElementById("search-results-container");
 
   // Metric Elements
   const statTotalModels = document.getElementById("stat-total-models");
@@ -20,6 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCollect = document.getElementById("btn-collect");
   const btnSeed = document.getElementById("btn-seed");
   const btnRefresh = document.getElementById("btn-refresh");
+
+  let searchDebounceTimer = null;
+  let currentlyPinnedIds = new Set();
 
   // Initial Boot Sequence
   runBootSequence();
@@ -52,15 +62,19 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadDashboardData() {
     try {
       updateTimestamp();
-      logTerminal("Iniciando varredura de telemetria dos dados...");
+      logTerminal("Sincronizando dados dos tênis fixados no SQLite...");
 
-      const [summaryRes, historyRes] = await Promise.all([
+      const [summaryRes, historyRes, pinnedRes] = await Promise.all([
         fetch("/api/summary"),
-        fetch("/api/history")
+        fetch("/api/history"),
+        fetch("/api/sneakers/pinned")
       ]);
 
       const summaryData = await summaryRes.json();
       const historyData = await historyRes.json();
+      const pinnedData = await pinnedRes.json();
+
+      currentlyPinnedIds = new Set(pinnedData.map(p => p.id));
 
       renderMetrics(summaryData.summaries, summaryData.alerts);
       renderSneakersGrid(summaryData.summaries);
@@ -73,11 +87,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (summaryData.alerts && summaryData.alerts.length > 0) {
         summaryData.alerts.forEach(a => logTerminal(`🔔 ${a.message}`, true));
       } else {
-        logTerminal("Varredura concluída. Todos os sistemas operando normalmente.");
+        logTerminal("Varredura de telemetria concluída. Radar ativo.");
       }
 
     } catch (err) {
-      logTerminal(`❌ Erro ao conectar ao servidor de dados: ${err.message}`, true);
+      logTerminal(`❌ Erro de conexão com o servidor API: ${err.message}`, true);
     }
   }
 
@@ -125,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!summaries || summaries.length === 0) {
       sneakersContainer.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 3rem;">
-          Nenhum tênis cadastrado no momento. Clique em 'Gerar 30D Mock' para testar.
+          Nenhum tênis fixado no momento. Use o <strong>Market Scanner</strong> acima para buscar e fixar modelos!
         </div>
       `;
       return;
@@ -142,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.innerHTML = `
         <div class="card-badge-row">
           <span class="badge-target ${badgeClass}">${badgeText}</span>
-          <span class="source-tag">${s.current_best_source}</span>
+          <button class="btn-unpin" data-id="${s.sneaker_id}" title="Desafixar do radar">🗑️ Desafixar</button>
         </div>
 
         <div class="sneaker-title">${s.name}</div>
@@ -168,9 +182,23 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="card-footer-info">
-          <span>Menor registrado em ${s.all_time_lowest_date}</span>
+          <span>Menor em ${s.all_time_lowest_date}</span>
+          <span class="source-tag">${s.current_best_source}</span>
         </div>
       `;
+
+      // Event Listener para Desafixar
+      const unpinBtn = card.querySelector(".btn-unpin");
+      if (unpinBtn) {
+        unpinBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const idToUnpin = unpinBtn.getAttribute("data-id");
+          logTerminal(`Desafixando tênis ID '${idToUnpin}' do radar...`);
+          await fetch(`/api/sneakers/pin/${idToUnpin}`, { method: "DELETE" });
+          currentlyPinnedIds.delete(idToUnpin);
+          await loadDashboardData();
+        });
+      }
 
       sneakersContainer.appendChild(card);
       if (typeof initCardTilt === "function") {
@@ -179,7 +207,132 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Event Listeners
+  // Market Scanner Search Functions
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value;
+      if (searchClearBtn) {
+        searchClearBtn.classList.toggle("hidden", query.length === 0);
+      }
+
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        performMarketSearch(query);
+      }, 300);
+    });
+  }
+
+  if (searchClearBtn) {
+    searchClearBtn.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      searchClearBtn.classList.add("hidden");
+      if (searchResultsContainer) searchResultsContainer.classList.add("hidden");
+      if (searchStatusBar) searchStatusBar.classList.add("hidden");
+    });
+  }
+
+  // Keyboard Shortcuts ('/' to search, 'ESC' to clear)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && document.activeElement !== searchInput) {
+      e.preventDefault();
+      if (searchInput) searchInput.focus();
+    } else if (e.key === "Escape" && document.activeElement === searchInput) {
+      if (searchClearBtn) searchClearBtn.click();
+    }
+  });
+
+  async function performMarketSearch(query) {
+    if (!query || query.trim().length === 0) {
+      if (searchResultsContainer) searchResultsContainer.classList.add("hidden");
+      if (searchStatusBar) searchStatusBar.classList.add("hidden");
+      return;
+    }
+
+    if (searchStatusBar) searchStatusBar.classList.remove("hidden");
+    if (searchStatusText) searchStatusText.textContent = "SCANNING MARKETPLACES & TELEMETRY...";
+
+    // Dispara animação do Laser 3D Three.js
+    if (typeof window.triggerLaserScan === "function") {
+      window.triggerLaserScan();
+    }
+
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const results = await res.json();
+
+      renderSearchResults(results);
+      logTerminal(`Busca por '${query}' finalizada. ${results.length} resultados encontrados.`);
+
+    } catch (err) {
+      logTerminal(`Erro ao buscar modelos: ${err.message}`, true);
+    } finally {
+      if (searchStatusText) searchStatusText.textContent = "VARREDURA CONCLUÍDA";
+    }
+  }
+
+  function renderSearchResults(results) {
+    if (!searchResultsContainer) return;
+    searchResultsContainer.innerHTML = "";
+    searchResultsContainer.classList.remove("hidden");
+
+    if (!results || results.length === 0) {
+      searchResultsContainer.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 1.5rem;">
+          Nenhum modelo encontrado para este termo de busca.
+        </div>
+      `;
+      return;
+    }
+
+    results.forEach(sneaker => {
+      const isPinned = currentlyPinnedIds.has(sneaker.id);
+
+      const card = document.createElement("div");
+      card.className = "search-result-card";
+      card.innerHTML = `
+        <div class="product-img-wrapper">
+          <img src="${sneaker.image_url}" alt="${sneaker.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600'">
+        </div>
+        <div class="search-title">${sneaker.name}</div>
+        <div class="search-colorway">${sneaker.colorway} (${sneaker.size})</div>
+
+        <div class="search-price-row">
+          <div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">PREÇO ESTIMADO</div>
+            <div class="search-price">R$ ${sneaker.estimated_price ? sneaker.estimated_price.toFixed(2) : sneaker.target_price.toFixed(2)}</div>
+          </div>
+          <button class="btn-pin-target ${isPinned ? 'pinned' : ''}" data-sneaker='${JSON.stringify(sneaker).replace(/'/g, "&apos;")}'>
+            ${isPinned ? '📌 FIXADO' : '🎯 FIXAR ALVO'}
+          </button>
+        </div>
+      `;
+
+      const pinBtn = card.querySelector(".btn-pin-target");
+      if (pinBtn && !isPinned) {
+        pinBtn.addEventListener("click", async () => {
+          const sneakerData = JSON.parse(pinBtn.getAttribute("data-sneaker").replace(/&apos;/g, "'"));
+          logTerminal(`🎯 Target Lock ativado! Fixando '${sneakerData.name}' no radar...`, true);
+
+          pinBtn.textContent = "📌 FIXADO";
+          pinBtn.classList.add("pinned");
+          pinBtn.disabled = true;
+
+          await fetch("/api/sneakers/pin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(sneakerData)
+          });
+
+          currentlyPinnedIds.add(sneakerData.id);
+          await loadDashboardData();
+        });
+      }
+
+      searchResultsContainer.appendChild(card);
+    });
+  }
+
+  // Action Buttons
   if (btnCollect) {
     btnCollect.addEventListener("click", async () => {
       btnCollect.disabled = true;

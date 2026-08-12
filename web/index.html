@@ -35,8 +35,8 @@
       <div class="boot-terminal" id="boot-terminal-text">
         <div class="boot-line"><span>[SYSTEM]</span> Initializing core subsystems... <span class="ok">OK</span></div>
         <div class="boot-line"><span>[DB]</span> SQLite database link active... <span class="ok">CONNECTED</span></div>
-        <div class="boot-line"><span>[WEBGL]</span> Mounting 3D Particle Radar grid... <span class="ok">READY</span></div>
-        <div class="boot-line"><span>[SCRAPERS]</span> StockX & Nike API endpoints mapped... <span class="ok">ONLINE</span></div>
+        <div class="boot-line"><span>[WEBGL]</span> Mounting 3D Particle Radar & Scanner Beam... <span class="ok">READY</span></div>
+        <div class="boot-line"><span>[SEARCH]</span> Multi-source market catalog engine... <span class="ok">ONLINE</span></div>
       </div>
       <div class="boot-progress-bar">
         <div class="boot-progress-fill" id="boot-fill"></div>
@@ -57,7 +57,7 @@
       <div class="telemetry-status">
         <div class="status-badge">
           <span class="pulse-dot"></span>
-          LIVE MONITOR ACTIVE
+          LIVE RADAR SCANNER
         </div>
         <div style="color: var(--text-muted);">
           REFRESH: <span id="last-update-time" style="color: var(--text-primary);">--:--:--</span>
@@ -68,9 +68,9 @@
     <!-- Key Telemetry Metrics Grid -->
     <section class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Modelos Monitorados</div>
+        <div class="stat-label">Modelos Fixados no Radar</div>
         <div class="stat-value" id="stat-total-models">0</div>
-        <div class="stat-desc">Tênis ativos no radar (Tam BR 40)</div>
+        <div class="stat-desc">Tênis monitorados no SQLite</div>
       </div>
 
       <div class="stat-card">
@@ -92,12 +92,36 @@
       </div>
     </section>
 
+    <!-- Tactical Market Scanner Search Section -->
+    <section class="chart-panel search-panel">
+      <div class="search-bar-header">
+        <div class="section-heading">MARKET SCANNER // BUSCA DE SNEAKERS</div>
+        <span class="search-shortcut-badge">Pressione <kbd>/</kbd> para buscar</span>
+      </div>
+
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="market-search-input" placeholder="Digite o nome do tênis (ex: Nike Vomero, Samba, Jordan, Dunk)..." autocomplete="off">
+        <button id="search-clear-btn" class="search-clear-btn hidden">✕</button>
+      </div>
+
+      <div id="search-status-bar" class="search-status-bar hidden">
+        <span class="scanner-beam-line"></span>
+        <span id="search-status-text">SCANNING MARKETPLACES...</span>
+      </div>
+
+      <!-- Search Results Grid -->
+      <div id="search-results-container" class="search-results-grid hidden">
+        <!-- Injetado dinamicamente via JS -->
+      </div>
+    </section>
+
     <!-- Control Bar (Actions & Filters) -->
     <section class="control-bar">
-      <div class="section-heading">Radar de Tênis em Vigilância</div>
+      <div class="section-heading">Tênis Fixados em Monitoramento Continuo</div>
       <div class="action-buttons">
         <button class="btn-hud" id="btn-collect">
-          ⚡ Executar Varredura
+          ⚡ Varredura Manual
         </button>
         <button class="btn-hud btn-secondary" id="btn-seed">
           📊 Gerar 30D Mock
@@ -118,7 +142,7 @@
       <div class="chart-panel">
         <div class="chart-header">
           <div class="section-heading">Histórico de Flutuação de Preço (R$)</div>
-          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">Últimos 30 Dias</span>
+          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">Modelos Fixados</span>
         </div>
         <div class="chart-wrapper">
           <canvas id="priceHistoryChart"></canvas>
