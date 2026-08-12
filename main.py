@@ -227,11 +227,16 @@ def main():
     parser.add_argument("--report", action="store_true", help="Gera o relatório executivo e exporta os gráficos PNG")
     parser.add_argument("--add", action="store_true", help="Cadastra interativamente um novo tênis para monitoramento")
     parser.add_argument("--schedule", action="store_true", help="Inicia a execução agendada automática diária")
+    parser.add_argument("--web", action="store_true", help="Inicia o servidor web interativo do dashboard (http://localhost:5000)")
 
     args = parser.parse_args()
     app = SneakerPriceTrackerApp()
 
-    if args.seed_history:
+    if args.web:
+        from server import app as flask_app
+        print("🚀 Servidor Sneaker Pulse Command Center ativo em http://localhost:5000")
+        flask_app.run(host="0.0.0.0", port=5000, debug=False)
+    elif args.seed_history:
         app.generate_mock_history(days=30)
         app.generate_report()
     elif args.collect:

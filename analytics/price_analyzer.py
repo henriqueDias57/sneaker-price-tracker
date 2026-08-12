@@ -30,24 +30,24 @@ class PriceAnalyzer:
             min_ever_row = group.sort_values("price").iloc[0]
             max_ever_price = group["price"].max()
 
-            current_price = best_current_row["price"]
-            min_ever_price = min_ever_row["price"]
+            current_price = float(best_current_row["price"])
+            min_ever_price = float(min_ever_row["price"])
             
-            target_hit = current_price <= target_price
-            all_time_low_hit = current_price <= min_ever_price
+            target_hit = True if current_price <= target_price else False
+            all_time_low_hit = True if current_price <= min_ever_price else False
 
-            discount_from_max = round(((max_ever_price - current_price) / max_ever_price) * 100, 1) if max_ever_price > 0 else 0.0
+            discount_from_max = float(round(((max_ever_price - current_price) / max_ever_price) * 100, 1)) if max_ever_price > 0 else 0.0
 
             summaries.append({
-                "sneaker_id": sneaker_id,
-                "name": sneaker_name,
-                "colorway": colorway,
-                "size": size,
-                "target_price": target_price,
+                "sneaker_id": str(sneaker_id),
+                "name": str(sneaker_name),
+                "colorway": str(colorway),
+                "size": str(size),
+                "target_price": float(target_price),
                 "current_best_price": current_price,
-                "current_best_source": best_current_row["source_name"],
+                "current_best_source": str(best_current_row["source_name"]),
                 "all_time_lowest_price": min_ever_price,
-                "all_time_lowest_source": min_ever_row["source_name"],
+                "all_time_lowest_source": str(min_ever_row["source_name"]),
                 "all_time_lowest_date": min_ever_row["timestamp"].strftime("%Y-%m-%d"),
                 "discount_from_max_pct": discount_from_max,
                 "target_hit": target_hit,
