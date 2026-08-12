@@ -56,41 +56,41 @@ De acordo com as boas práticas de web scraping e verificação dos arquivos `ro
 
 ---
 
-## 🚀 Como Instalar e Rodar
+## 🖥️ Servidor Web Interativo (Dashboard Command Center)
 
-### 1. Clocar o repositório e preparar o ambiente
+Para iniciar o dashboard tático em tempo real no seu navegador:
 
 ```bash
-git clone https://github.com/henriqueDias57/sneaker-price-tracker.git
-cd sneaker-price-tracker
-
-# Criar ambiente virtual (opcional, mas recomendado)
-python -m venv venv
-# No Windows:
-venv\Scripts\activate
-# No Linux/macOS:
-source venv/bin/activate
-
-# Instalar dependências
-pip install -r requirements.txt
+python main.py --web
 ```
+Acesse no seu navegador: **`http://localhost:5000`**
+
+- **Matriz 3D WebGL**: Globo de partículas interativo em Three.js que reage ao mouse.
+- **Boot Sequence**: Inicialização visual de telemetria no estilo terminal tático.
+- **Microinterações 3D**: Cards com efeito 3D Tilt e brilhos neon vermelhos.
+- **Gráficos Customizados**: Séries temporais em Chart.js com gradiente cyber e linhas guia táticas.
+- **Terminal de Alertas**: Logs em tempo real na gaveta inferior do dashboard.
 
 ---
 
-## 🛠️ Comandos de Uso
+## 🛠️ Comandos de Uso CLI & Web
 
-### 1. Gerar dados de teste (30 dias) e visualizar relatórios
-Para popular o banco com dados históricos de demonstração para o seu portfólio:
+### 1. Iniciar o Dashboard Web Interativo
+```bash
+python main.py --web
+```
+
+### 2. Gerar dados de teste (30 dias) e popular o banco
 ```bash
 python main.py --seed-history
 ```
 
-### 2. Executar a coleta de preços atual
+### 3. Executar a varredura de preços atual
 ```bash
 python main.py --collect --mock
 ```
 
-### 3. Exibir relatório no terminal e exportar gráficos PNG
+### 4. Exibir relatório executivo no terminal e exportar gráficos PNG
 ```bash
 python main.py --report
 ```
